@@ -1,6 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  Send2,
+  Code,
+  Save2,
+  InfoCircle,
+  CloseCircle,
+  TickCircle,
+  ArrowDown2,
+} from "iconsax-react";
 import type {
   ContractABI,
   ContractFunction,
@@ -35,7 +44,6 @@ export default function RequestPanel({
   const [saveName, setSaveName] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
 
-  // Load from saved request
   useEffect(() => {
     if (!initialRequest) return;
     setContractAddress(initialRequest.contractAddress);
@@ -116,87 +124,112 @@ export default function RequestPanel({
     abi?.functions.filter((f) => f.access === "read_only") ?? [];
 
   return (
-    <div className="request-panel">
-      {/* Contract inputs */}
-      <section className="panel-section">
-        <h2 className="section-title">Contract</h2>
-        <div className="row">
-          <select
-            value={network}
-            onChange={(e) =>
-              setNetwork(e.target.value as "mainnet" | "testnet")
-            }
-            className="input select-sm"
-          >
-            <option value="mainnet">Mainnet</option>
-            <option value="testnet">Testnet</option>
-          </select>
+    <div className="flex flex-col gap-4 p-6 max-w-3xl w-full mx-auto">
+      {/* Contract section */}
+      <div className="bg-[#161b27] border border-[#1e2535] rounded-xl p-4 space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] flex items-center gap-2">
+          <Code size={13} color="#7c5cfc" /> Contract
+        </h2>
+
+        {/* Network toggle */}
+        <div className="flex gap-2">
+          {(["mainnet", "testnet"] as const).map((n) => (
+            <button
+              key={n}
+              onClick={() => setNetwork(n)}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                network === n
+                  ? n === "mainnet"
+                    ? "bg-[#7c5cfc]/20 text-[#7c5cfc] border border-[#7c5cfc]/40"
+                    : "bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/40"
+                  : "bg-[#0f1117] text-[#64748b] border border-[#1e2535] hover:border-[#7c5cfc]/40"
+              }`}
+            >
+              {n.charAt(0).toUpperCase() + n.slice(1)}
+            </button>
+          ))}
         </div>
-        <div className="row">
+
+        <div className="flex gap-2">
           <input
-            className="input"
-            placeholder="Contract address (e.g. SP2...)"
+            className="flex-1 bg-[#0f1117] border border-[#1e2535] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#7c5cfc] transition-colors"
+            placeholder="Contract address (SP2…)"
             value={contractAddress}
             onChange={(e) => setContractAddress(e.target.value)}
           />
           <input
-            className="input"
+            className="flex-1 bg-[#0f1117] border border-[#1e2535] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#7c5cfc] transition-colors"
             placeholder="Contract name"
             value={contractName}
             onChange={(e) => setContractName(e.target.value)}
           />
           <button
-            className="btn btn-primary"
             onClick={handleFetchAbi}
             disabled={loadingAbi}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7c5cfc] hover:bg-[#6b4ef0] disabled:opacity-50 text-white text-sm font-medium transition-colors shrink-0"
           >
+            <InfoCircle size={14} color="#fff" />
             {loadingAbi ? "Loading…" : "Fetch ABI"}
           </button>
         </div>
-      </section>
+      </div>
 
       {/* Function selector */}
       {abi && (
-        <section className="panel-section">
-          <h2 className="section-title">Read-only Function</h2>
+        <div className="bg-[#161b27] border border-[#1e2535] rounded-xl p-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] flex items-center gap-2">
+            <ArrowDown2 size={13} color="#7c5cfc" /> Read-only Functions
+          </h2>
           {readOnlyFns.length === 0 ? (
-            <p className="empty-hint">No read-only functions found.</p>
+            <p className="text-sm text-[#64748b]">
+              No read-only functions found.
+            </p>
           ) : (
-            <div className="fn-tabs">
+            <div className="flex flex-wrap gap-2">
               {readOnlyFns.map((fn) => (
                 <button
                   key={fn.name}
-                  className={`fn-tab ${selectedFn?.name === fn.name ? "active" : ""}`}
                   onClick={() => {
                     setSelectedFn(fn);
                     setArgValues({});
                     setResult(null);
                   }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                    selectedFn?.name === fn.name
+                      ? "bg-[#7c5cfc] text-white"
+                      : "bg-[#0f1117] text-[#94a3b8] border border-[#1e2535] hover:border-[#7c5cfc]/50"
+                  }`}
                 >
                   {fn.name}
                 </button>
               ))}
             </div>
           )}
-        </section>
+        </div>
       )}
 
-      {/* Args */}
+      {/* Arguments */}
       {selectedFn && (
-        <section className="panel-section">
-          <h2 className="section-title">Arguments</h2>
+        <div className="bg-[#161b27] border border-[#1e2535] rounded-xl p-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-[#64748b]">
+            Arguments
+          </h2>
           {selectedFn.args.length === 0 ? (
-            <p className="empty-hint">No arguments.</p>
+            <p className="text-sm text-[#64748b]">No arguments required.</p>
           ) : (
-            <div className="args-grid">
+            <div className="space-y-2">
               {selectedFn.args.map((arg) => (
-                <div key={arg.name} className="arg-row">
-                  <label className="arg-label">
-                    {arg.name}
-                    <span className="arg-type">{arg.type}</span>
-                  </label>
+                <div key={arg.name} className="flex items-center gap-3">
+                  <div className="w-40 shrink-0">
+                    <p className="text-xs text-[#e2e8f0] font-medium">
+                      {arg.name}
+                    </p>
+                    <p className="text-[10px] text-[#64748b] font-mono">
+                      {arg.type}
+                    </p>
+                  </div>
                   <input
-                    className="input"
+                    className="flex-1 bg-[#0f1117] border border-[#1e2535] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#7c5cfc] transition-colors font-mono"
                     placeholder={arg.type}
                     value={argValues[arg.name] ?? ""}
                     onChange={(e) =>
@@ -210,67 +243,87 @@ export default function RequestPanel({
               ))}
             </div>
           )}
-          <div className="row mt-2">
+          <div className="flex gap-2 pt-1">
             <input
-              className="input"
+              className="flex-1 bg-[#0f1117] border border-[#1e2535] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#7c5cfc] transition-colors"
               placeholder="Sender address (optional)"
               value={senderAddress}
               onChange={(e) => setSenderAddress(e.target.value)}
             />
             <button
-              className="btn btn-primary"
               onClick={handleCall}
               disabled={loadingCall}
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#7c5cfc] hover:bg-[#6b4ef0] disabled:opacity-50 text-white text-sm font-medium transition-colors shrink-0"
             >
+              <Send2 size={14} color="#fff" />
               {loadingCall ? "Calling…" : "Call"}
             </button>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Result */}
+      {/* Response */}
       {(result !== null || error) && (
-        <section className="panel-section">
-          <h2 className="section-title">Response</h2>
-          {error ? (
-            <pre className="result-box error">{error}</pre>
-          ) : (
-            <pre className="result-box success">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          )}
-        </section>
+        <div className="bg-[#161b27] border border-[#1e2535] rounded-xl p-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] flex items-center gap-2">
+            {error ? (
+              <CloseCircle size={13} color="#ef4444" />
+            ) : (
+              <TickCircle size={13} color="#22c55e" />
+            )}
+            Response
+          </h2>
+          <pre
+            className={`text-xs font-mono rounded-lg p-4 overflow-x-auto whitespace-pre-wrap break-all ${
+              error
+                ? "bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20"
+                : "bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20"
+            }`}
+          >
+            {error ?? JSON.stringify(result, null, 2)}
+          </pre>
+        </div>
       )}
 
       {/* Save to collection */}
       {selectedFn && collections.length > 0 && (
-        <section className="panel-section">
-          <h2 className="section-title">Save Request</h2>
-          <form onSubmit={handleSave} className="row">
+        <div className="bg-[#161b27] border border-[#1e2535] rounded-xl p-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-[#64748b] flex items-center gap-2">
+            <Save2 size={13} color="#7c5cfc" /> Save Request
+          </h2>
+          <form onSubmit={handleSave} className="flex gap-2">
             <input
-              className="input"
+              className="flex-1 bg-[#0f1117] border border-[#1e2535] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#7c5cfc] transition-colors"
               placeholder="Request name"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
             />
             <select
-              className="input select-sm"
+              className="bg-[#0f1117] border border-[#1e2535] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] outline-none focus:border-[#7c5cfc] transition-colors"
               value={saveColId}
               onChange={(e) => setSaveColId(e.target.value)}
             >
-              <option value="">Select collection…</option>
+              <option value="">Collection…</option>
               {collections.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
             </select>
-            <button type="submit" className="btn btn-secondary">
+            <button
+              type="submit"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1e2535] hover:bg-[#7c5cfc]/30 text-[#e2e8f0] text-sm font-medium transition-colors shrink-0"
+            >
+              <Save2 size={14} color="#7c5cfc" />
               Save
             </button>
-            {saveMsg && <span className="save-msg">{saveMsg}</span>}
+            {saveMsg && (
+              <span className="flex items-center gap-1 text-xs text-[#22c55e]">
+                <TickCircle size={12} color="#22c55e" /> {saveMsg}
+              </span>
+            )}
           </form>
-        </section>
+        </div>
       )}
     </div>
   );
